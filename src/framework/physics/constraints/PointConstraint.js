@@ -1,9 +1,9 @@
-import {convertWorldPositionToObject, getObjectId} from '../api';
+import {convertWorldPositionToObject} from '../api';
 
 export class PointConstraint {
   constructor(obja, objb, position) {
-    const objecta = obja.getNative();
-    let objectb = obja.getNative();
+    const objecta = obja;
+    let objectb = objb;
 
     if (position === undefined) {
       position = objectb;
@@ -12,7 +12,6 @@ export class PointConstraint {
 
     this.type = 'point';
     this.appliedImpulse = 0;
-    this.id = getObjectId();
     this.objecta = objecta._physijs.id;
     this.positiona = convertWorldPositionToObject(position, objecta).clone();
 

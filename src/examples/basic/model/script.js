@@ -1,118 +1,90 @@
-const GAME = new WHS.World({
-  stats: 'fps', // fps, ms, mb
-  autoresize: "window",
+import * as UTILS from './globals';
 
-  gravity: {
-    x: 0,
-    y: -100,
-    z: 0
-  },
+const world = new WHS.World({
+  ...UTILS.$world,
 
   camera: {
     far: 10000,
-    y: 100,
-    z: 300
-  },
-
-  shadowmap: {
-    type: THREE.PCFSoftShadowMap
+    position: [0, 100, 300]
   }
 });
 
-window.teapot = new WHS.Model({
+const teapot = new WHS.Model({
   geometry: {
     path: '{{ assets }}/models/teapot/utah-teapot-large.json',
     physics: '{{ assets }}/models/teapot/utah-teapot-light.json'
   },
 
-  mass: 100,
-  
+  mass: 200,
+
   physics: {
-    type: 'convex',
+    type: 'concave',
     friction: 1,
-    restitution: 0
+    restitution: 0.5
   },
 
   material: {
-    shading: THREE.SmoothShading,
-    map: WHS.texture('{{ assets }}/textures/teapot.jpg', {repeat: {x: 2, y: 2}}),
     kind: 'phong',
+    shading: THREE.SmoothShading,
+    map: WHS.texture('{{ assets }}/textures/teapot.jpg', {repeat: {x: 1, y: 1}}),
     side: THREE.DoubleSide,
     useCustomMaterial: true
   },
 
-  pos: {
-    x: 0,
-    y: 100,
-    z: 0
+  position: {
+    y: 100
   },
 
-  scale: {
-    x: 4,
-    y: 4,
-    z: 4
-  }
+  scale: [4, 4, 4]
 });
 
-window.teapot.addTo(GAME, 'wait');
-
-new WHS.Sphere({
+const ball = new WHS.Sphere({
   geometry: {
-    radius: 3
+    radius: 3,
+    widthSegments: 16,
+    heightSegments: 16
   },
 
-  mass: 12,
+  mass: 60,
 
   material: {
     kind: 'phong',
-    color: 0x00ff00
+    color: UTILS.$colors.mesh
   },
 
-  pos: {
-    x: 10, // 45
-    y: 250,
-    z: 0.769
-  }
-}).addTo(GAME);
-
-new WHS.Box({
-
-  geometry: {
-    width: 250,
-    height: 1,
-    depth: 250
+  physics: {
+    restitution: 1
   },
 
-  mass: 0,
+  position: [10, 250, -1.969]
+});
 
-  material: {
-    color: 0xff0000,
-    kind: 'phong'
+teapot.addTo(world).then(() => {
+  ball.addTo(world);
+});
+
+UTILS.addBoxPlane(world, 500);
+
+new WHS.SpotLight({
+  light: {
+    color: 0xffffff, // 0x00ff00,
+    intensity: 1,
+    distance: 300,
+    angle: 180
   },
 
-  pos: {
+  shadowmap: {
+    fov: 90
+  },
+
+  position: {
     x: 0,
-    y: 0,
-    z: 0
+    y: 150,
+    z: 50
   }
-}).addTo(GAME);
+}).addTo(world);
 
-new WHS.DirectionalLight({
-  color: 0xffffff, // 0x00ff00,
-  intensity: 2,
+UTILS.addAmbient(world, 0.3);
 
-  pos: {
-    x: 0,
-    y: 10,
-    z: 30
-  },
-
-  target: {
-    x: 0,
-    y: 0,
-    z: 0
-  }
-}).addTo(GAME);
-
-GAME.setControls(WHS.orbitControls());
-GAME.start();
+world.setControls(new WHS.OrbitControls());
+world.start();

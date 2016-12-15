@@ -1,9 +1,24 @@
-import * as THREE from 'three';
+import {
+  Material,
+  MeshBasicMaterial,
+  LineBasicMaterial,
+  LineDashedMaterial,
+  MeshDepthMaterial,
+  MeshFaceMaterial,
+  MeshLambertMaterial,
+  MeshNormalMaterial,
+  MeshPhongMaterial,
+  PointsMaterial,
+  MeshStandardMaterial,
+  PointCloudMaterial,
+  RawShaderMaterial,
+  ShaderMaterial,
+  SpriteCanvasMaterial,
+  SpriteMaterial
+} from 'three';
 
 export const loadMaterial = (material = {}) => {
-  if (material instanceof THREE.Material) {
-    return material;
-  }
+  if (material instanceof Material) return material;
   else {
     let materialThree;
 
@@ -15,71 +30,71 @@ export const loadMaterial = (material = {}) => {
 
     switch (material.kind) {
       case 'basic':
-        materialThree = new THREE.MeshBasicMaterial(params);
+        materialThree = new MeshBasicMaterial(params);
         break;
 
       case 'linebasic':
-        materialThree = new THREE.LineBasicMaterial(params);
+        materialThree = new LineBasicMaterial(params);
         break;
 
       case 'linedashed':
-        materialThree = new THREE.LineDashedMaterial(params);
+        materialThree = new LineDashedMaterial(params);
         break;
 
       case 'material':
-        materialThree = new THREE.Material(params);
+        materialThree = new Material(params);
         break;
 
       case 'depth':
-        materialThree = new THREE.MeshDepthMaterial(params);
+        materialThree = new MeshDepthMaterial(params);
         break;
 
       case 'face':
-        materialThree = new THREE.MeshFaceMaterial(params);
+        materialThree = new MeshFaceMaterial(params);
         break;
 
       case 'lambert':
-        materialThree = new THREE.MeshLambertMaterial(params);
+        materialThree = new MeshLambertMaterial(params);
         break;
 
       case 'normal':
-        materialThree = new THREE.MeshNormalMaterial(params);
+        materialThree = new MeshNormalMaterial(params);
         break;
 
       case 'phong':
-        materialThree = new THREE.MeshPhongMaterial(params);
+        materialThree = new MeshPhongMaterial(params);
         break;
 
       case 'points':
-        materialThree = new THREE.PointsMaterial(params);
+        materialThree = new PointsMaterial(params);
         break;
 
       case 'standard':
-        materialThree = new THREE.MeshStandardMaterial(params);
+        materialThree = new MeshStandardMaterial(params);
         break;
 
       case 'pointcloud':
-        materialThree = new THREE.PointCloudMaterial(params);
+        materialThree = new PointCloudMaterial(params);
         break;
 
       case 'rawshader':
-        materialThree = new THREE.RawShaderMaterial(params);
+        materialThree = new RawShaderMaterial(params);
         break;
 
       case 'shader':
-        materialThree = new THREE.ShaderMaterial(params);
+        materialThree = new ShaderMaterial(params);
         break;
 
       case 'spritecanvas':
-        materialThree = new THREE.SpriteCanvasMaterial(params);
+        materialThree = new SpriteCanvasMaterial(params);
         break;
 
       case 'sprite':
-        materialThree = new THREE.SpriteMaterial(params);
+        materialThree = new SpriteMaterial(params);
         break;
 
       default:
-        materialThree = new THREE.MeshBasicMaterial(params);
+        materialThree = new MeshBasicMaterial(params);
         break;
     }
 

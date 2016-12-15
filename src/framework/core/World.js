@@ -1,72 +1,43 @@
-import * as THREE from 'three';
-import Stats from 'stats.js';
-import * as Physijs from '../physics/index.js';
+import {
+  PCFSoftShadowMap,
+  Scene,
+  Vector3,
+  Fog,
+  FogExp2,
+  AxisHelper,
+  GridHelper
+} from 'three';
 
-import {PerspectiveCamera} from '../cameras/PerspectiveCamera';
-import {Camera} from './Camera';
-import {Shape} from './Shape';
-import {Light} from './Light';
-import {CoreObject} from './CoreObject';
+import { physicsEnabled } from '../physics/enabled';
+import { create } from '../physics/create/World';
+import { addResizeListener } from 'detect-element-resize';
 
-class World extends CoreObject {
-  constructor(params = {}) {
-    super({
-      stats: false,
-      autoresize: false,
-      softbody: false,
+import { extend } from '../utils/index';
+import { PerspectiveCamera } from '../components/cameras/PerspectiveCamera';
+import { BasicRendering } from '../components/rendering/basic/BasicRendering';
+import { Component } from './Component';
 
+class World extends Component {
+  static defaults = {
+    stats: false,
+    autoresize: false,
+    softbody: false,
+
+    helpers: {
+      grid: false,
+      axis: false
+    },
+
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+
+    rendering: {
       shadowmap: {
         enabled: true,
-        type: THREE.PCFSoftShadowMap
-      },
-
-      helpers: {
-        grid: false,
-        axis: false
-      },
-
-      gravity: {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-
-      camera: {
-        aspect: 75,
-        near: 1,
-        far: 1000,
-
-        x: 0,
-        y: 0,
-        z: 0
-      },
-
-      rWidth: 1, // Resolution(width).
-      rHeight: 1, // Resolution(height).
-
-      width: window.innerWidth, // Container(width).
-      height: window.innerHeight, // Container(height).
-
-      physics: {
-        fixedTimeStep: 1 / 60,
-        broadphase: {type: 'dynamic'}
-      },
-
-      fog: {
-        type: false,
-
-        density: 0.00025,
-        hex: 0x000000,
-        near: 1,
-        far: 1000
-      },
-
-      init: {
-        scene: true,
-        stats: true,
-        camera: true,
-        helpers: true,
-        renderer: true
+        type: PCFSoftShadowMap
       },
 
       background: {
@@ -74,91 +45,268 @@ class World extends CoreObject {
         opacity: 1
       },
 
-      renderer: {},
-      container: document.body
-    });
+      renderer: {}
+    },
 
-    super.setParams(params);
+    camera: {
+      fov: 75,
+      near: 1,
+      far: 1000,
 
-    const initParams = this.getParams().init;
+      position: {
+        x: 0,
+        y: 0,
+        z: 0
+      }
+    },
 
-    // INIT.
-    this._initDOM();
-    if (initParams.scene) this._initScene();
-    if (initParams.scene && initParams.stats) this._initStats();
+    width: window.innerWidth,
+    height: window.innerHeight,
+    container: window.document.body,
 
-    if (initParams.scene && initParams.camera) this._initCamera();
-    if (initParams.scene && initParams.renderer) this._initRenderer();
-    if (initParams.scene && initParams.helpers) this._initHelpers();
+    resolution: {
+      width: 1,
+      height: 1
+    },
 
-    // NOTE: ==================== Autoresize. ======================
+    physics: {
+      create: create,
+      fixedTimeStep: 1 / 60,
+      broadphase: {type: 'dynamic'}
+    },
 
-    if (params.autoresize === "window") {
-      window.addEventListener('resize', () => {
-        this.setSize(
-          Number(window.innerWidth * params.rWidth).toFixed(),
-          Number(window.innerHeight * params.rHeight).toFixed()
-        );
+    fog: {
+      type: false,
 
-        this.emit('resize');
-      });
-    } else if (this.getParams().autoresize) {
-      window.addEventListener('resize', () => {
-        this.setSize(
-          Number(params.container.offsetWidth * params.rWidth).toFixed(),
-          Number(params.container.offsetHeight * params.rHeight).toFixed()
-        );
+      density: 0.00025,
+      hex: 0x000000,
+      near: 1,
+      far: 1000
+    },
 
-        this.emit('resize');
-      });
+    modules: {
+      element: true,
+      scene: true,
+      stats: true,
+      camera: true,
+      helpers: true,
+      rendering: true
+    }
+  };
+
+  static instructions = {
+    camera: {
+      position: ['x', 'y', 'z']
+    },
+
+    gravity: ['x', 'y', 'z'],
+
+    modules: [
+      'element',
+      'scene',
+      'stats',
+      'camera',
+      'helpers',
+      'rendering'
+    ]
+  };
+
+  static helpers = {
+    axis: [AxisHelper, {
+      size: 5
+    }, ['size']],
+
+    grid: [GridHelper, {
+      size: 10,
+      step: 1,
+      color1: 0xffffff,
+      color2: 0xffffff
+    }, ['size', 'step', 'color1', 'color2']]
+  };
+
+  static pluginDeps = {
+    'camera': ['scene'],
+    'rendering': ['scene'],
+    'helpers': ['scene']
+  }
+
+  modules = {
+    element: null,
+    scene: null,
+    camera: null,
+    rendering: null,
+    helpers: null,
+    stats: null
+  };
+
+  get $rendering() { return this.modules.rendering; }
+  set $rendering(plugin) { this.modules.rendering = plugin(this); }
+
+  get $scene() { return this.modules.scene; }
+  set $scene(scene) { this.importScene(scene); }
+
+  get $camera() { return this.modules.camera; }
+  set $camera(camera) { this.modules.camera = camera; }
+
+  get $element() { return this.modules.element; }
+  set $element(element) { this.modules.element = element; }
+
+  simulate = false;
+  render = true;
+  loops = [];
+
+  constructor(params = {}) {
+    super(params, World.defaults, World.instructions);
+
+    for (let plugin in this.modules) {
+      if (World.pluginDeps[plugin]) {
+        const dependencies = World.pluginDeps[plugin];
+        let skip = false;
+
+        for (let i = 0, max = dependencies.length; i < max; i++)  { // console.log(dependencies[i]);
+          if (!this.params.modules[dependencies[i]]) skip = true;
+        }
+
+        if (skip) continue;
+      }
+
+      if (this.params.modules[plugin] && this[`make$${plugin}`]) this[`make$${plugin}`]();
     }
 
-    this.loops = [];
-    this.type = 'world';
 
-    return this;
+    if (params.autoresize) {
+      const container = params.container;
+
+      const resizeCallback = () => {
+        // FIXME: Am I crazy or offsetHeight is increasing even when we downsize the window ?
+        // console.log('height offset : ', params.container.offsetHeight);
+
+        this.setSize(
+          Number(container.offsetWidth * params.resolution.width).toFixed(),
+          Number(container.offsetHeight * params.resolution.height).toFixed()
+        );
+
+        this.emit('resize');
+      }
+
+      if (params.autoresize === 'window') window.addEventListener('resize', resizeCallback);
+      else {
+        if (params.autoresize.delay) {
+          let resize = true;
+
+          addResizeListener(container, () => {
+            window.clearTimeout(resize);
+            resize = window.setTimeout(resizeCallback, params.autoresize.delay);
+          });
+        }
+        else addResizeListener(container, resizeCallback);
+      }
+    }
+  }
+
+  make$scene() {
+    const params = this.params;
+    params.physics.create = params.physics.create || function () {};
+
+    const scene = physicsEnabled ? params.physics.create.bind(this)() : new Scene();
+
+    this.simulate = Boolean(physicsEnabled);
+
+    if (params.fog.type === 'regular')
+      scene.fog = new Fog(params.fog.hex, params.fog.near, params.fog.far);
+    else if (params.fog.type === 'exp'
+      || params.fog.type === 'expodential')
+      scene.fog = new FogExp2(params.fog.hex, params.fog.density);
+
+    this.importScene(scene, false);
+  }
+
+  make$element() {
+    this.$element = window.document.createElement('div');
+    this.$element.className = 'whs';
+    this.$element.style.width = 'inherit';
+    this.$element.style.height = 'inherit';
+    this.params.container.appendChild(this.$element);
+
+    return this.$element;
+  }
+
+  make$camera() {
+    const _params = this.params;
+
+    this.$camera = new PerspectiveCamera({
+      camera: {
+        fov: _params.camera.fov,
+        aspect: _params.width / _params.height,
+        near: _params.camera.near,
+        far: _params.camera.far
+      },
+
+      position: {
+        x: _params.camera.position.x,
+        y: _params.camera.position.y,
+        z: _params.camera.position.z
+      }
+    });
+
+    this.$camera.addTo(this);
+  }
+
+  make$rendering() {
+    const _params = this.params;
+    const computedWidth = Number(_params.width * _params.resolution.width).toFixed();
+    const computedHeight = Number(_params.height * _params.resolution.height).toFixed();
+
+    this.$rendering = new BasicRendering(this.params);
+  }
+
+  make$helpers() {
+    const _helpers = this.params.helpers;
+
+    if (_helpers.axis) this.addHelper('axis', _helpers.axis);
+    if (_helpers.grid) this.addHelper('grid', _helpers.grid);
   }
 
   /**
-   * Initialize THREE.js scene object.
+   * Start animation.
    */
-  _initScene() {
-    const params = this.getParams(),
-      scene = !!'physics'
-      ? new Physijs.Scene(
-        {
-          fixedTimeStep: params.physics.fixedTimeStep,
-          broadphase: params.physics.broadphase
-        },
-        {
-          stats: params.stats,
-          world: this,
-          softbody: params.softbody
-        }
-      ) : new THREE.Scene();
+  start() {
+    if (this.$rendering) this.$rendering.start(this.beforeRender.bind(this), this.afterRender.bind(this));
+  }
 
-    if (!!'physics') {
-      scene.setGravity(
-        new THREE.Vector3(
-          params.gravity.x,
-          params.gravity.y,
-          params.gravity.z
-        )
-      );
+  /**
+   * Callback called immediately before Plugin Rendering.
+   * @param  {Number} delta : delta time elapsed since the last frame.
+   */
+  beforeRender(delta) {
+    for (let i = 0; i < this.children.length; i++)
+      if (this.children[i].type === 'morph') this.children[i].native.mixer.update(delta);
 
-      this.simulate = true;
-    } else this.simulate = false;
+    if (this.controls) {
+      this.controls.update(Date.now() - this.time);
+      this.time = Date.now();
+    };
 
-    if (params.fog.type === 'regular')
-      scene.fog = new THREE.Fog(params.fog.hex, params.fog.near, params.fog.far);
-    else if (params.fog.type === 'exp'
-      || params.fog.type === 'expodential')
-      scene.fog = new THREE.FogExp2(params.fog.hex, params.fog.density);
+    if (this.simulate) this.$scene.simulate(delta, 1);
+  }
 
-    this.setScene(scene, false);
+  /**
+   * Callback called immediately after the Plugin Rendering.
+   * @param  {Number} delta : delta time elapsed since the last frame (will be equal to beforeRender delta).
+   */
+  afterRender(delta) {
+    for (let i = 0; i < this.loops.length; i++) {
+      const e = this.loops[i];
+      if (e.enabled) e.execute(e.clock);
+    }
+  }
 
-    // Array for processing.
-    this.children = [];
+  /**
+   * Retrieve the renderer used by the active rendering plugin.
+   * @return {THREE.WebGLRenderer} The WebGLRenderer used by the current rendering plugin.
+   */
+  get renderer() {
+    if (this.$rendering) return this.$rendering.$renderer;
   }
 
   addLoop(loop) {
@@ -175,239 +323,30 @@ class World extends CoreObject {
     });
   }
 
-  /**
-   * Initialize DOM structure for whitestorm.
-   */
-  _initDOM() {
-    const params = this.getParams();
-
-    params.container.style.margin = 0;
-    params.container.style.padding = 0;
-    params.container.style.position = 'relative';
-    params.container.style.overflow = 'hidden';
-
-    this._dom = document.createElement('div');
-    this._dom.className = 'whs';
-
-    params.container.appendChild(this._dom);
-
-    return this._dom;
+  addHelper(name, params = {}, helpers = World.helpers) {
+    super.addHelper(name, params, helpers);
   }
 
-  /**
-   * Inititialize stats plugin.
-   */
-  _initStats() {
-    const params = this.getParams();
-
-    if (params.stats) {
-      this._stats = new Stats();
-
-      if (params.stats === 'fps')
-        this._stats.setMode(0);
-
-      else if (params.stats === 'ms')
-        this._stats.setMode(1);
-
-      else if (params.stats === 'mb')
-        this._stats.setMode(1);
-
-      else {
-        this._stats.setMode(0);
-        console.warn([this._stats], 'Please, apply stats mode [fps, ms, mb] .');
-      }
-
-      this._stats.domElement.style.position = 'absolute';
-      this._stats.domElement.style.left = '0px';
-      this._stats.domElement.style.bottom = '0px';
-
-      this._dom.appendChild(this._stats.domElement);
-    }
-  }
-
-  /**
-   * Create a camera and add it to scene.
-   */
-  _initCamera() {
-    const params = this.getParams();
-
-    this.setCamera(new PerspectiveCamera({
-      camera: {
-        fov: params.camera.aspect,
-        aspect: params.width / params.height,
-        near: params.camera.near,
-        far: params.camera.far
-      },
-
-      pos: {
-        x: params.camera.x,
-        y: params.camera.y,
-        z: params.camera.z
-      }
-    }));
-
-    this.getCamera().addTo(this);
-  }
-
-  /**
-   * Create a renderer and apply it's options.
-   */
-  _initRenderer() {
-    this.render = true;
-
-    // Renderer.
-    this.setRenderer(new THREE.WebGLRenderer(this.getParams().renderer));
-
-    const renderer = this.getRenderer();
-    renderer.setClearColor(this.getParams().background.color, this.getParams().background.opacity);
-
-    // Shadowmap.
-    renderer.shadowMap.enabled = this.getParams().shadowmap.enabled;
-    renderer.shadowMap.type = this.getParams().shadowmap.type;
-    renderer.shadowMap.cascade = true;
-
-    renderer.setSize(
-      Number(this.getParams().width * this.getParams().rWidth).toFixed(),
-      Number(this.getParams().height * this.getParams().rHeight).toFixed()
-    );
-
-    renderer.render(this.getScene(), this.getCamera().getNative());
-
-    this._dom.appendChild(renderer.domElement);
-
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-  }
-
-  /**
-   * Add helpers to scene.
-   */
-  _initHelpers() {
-    const params = this.getParams(),
-      scene = this.getScene();
-
-    if (params.helpers.axis) {
-      scene.add(
-        new THREE.AxisHelper(
-          params.helpers.axis.size
-          ? params.helpers.axis.size
-          : 5
-        )
-      );
-    }
-
-    if (params.helpers.grid) {
-      scene.add(
-        new THREE.GridHelper(
-          params.helpers.grid.size
-          ? params.helpers.grid.size
-          : 10,
-          params.helpers.grid.step
-          ? params.helpers.grid.step
-          : 1,
-          params.helpers.grid.color1,
-          params.helpers.grid.color2
-        )
-      );
-    }
-  }
-
-  /**
-   * Start animation.
-   */
-  start() {
-    const clock = new THREE.Clock(),
-      _scope = this,
-      scene = _scope.getScene(),
-      cameraNative = _scope.getCamera().getNative(),
-      renderer = _scope.getRenderer();
-
-    window.requestAnimFrame = (() => {
-      return window.requestAnimationFrame
-        || window.webkitRequestAnimationFrame
-        || window.mozRequestAnimationFrame
-        || function (callback) {
-          window.setTimeout(callback, 1000 / 60);
-        };
-    })();
-
-    function reDraw(time) {
-      window.requestAnimFrame(reDraw);
-
-      // Init stats.
-      if (_scope._stats) _scope._stats.begin();
-
-      _scope._process(clock.getDelta());
-      if (_scope.controls) _scope._updateControls();
-
-      if (_scope.simulate) scene.simulate(clock.getDelta(), 1);
-
-      // Effects rendering.
-      if (_scope._composer && _scope.render) {
-        _scope._composer.reset();
-        _scope._composer.render(scene, cameraNative);
-        _scope._composer.pass(_scope._composer.stack);
-        _scope._composer.toScreen();
-      } else if (_scope.render) renderer.render(scene, cameraNative);
-
-      _scope._execLoops();
-
-      // End helper.
-      if (_scope._stats) _scope._stats.end();
-    }
-
-    this._update = reDraw;
-
-    _scope._update();
-  }
-
-  /**
-   * Execute all loops with a specific time.
-   *
-   * @params {number} time - The time value that will be passed to loops.
-   */
-  _execLoops() {
-    for (let i = 0; i < this.loops.length; i++) {
-      const e = this.loops[i];
-      if (e.enabled) e.execute(e.clock);
-    }
-  }
-
-  /**
-   * Update controls time values.
-   */
-  _updateControls() {
-    this.controls.update(Date.now() - this.time);
-    this.time = Date.now();
-  }
-
-  /**
-   * Update morphs animations.
-   *
-   * @params {THREE.Clock} clock - The clock object, which.
-   */
-  _process(delta) {
-    for (let i = 0; i < this.children.length; i++)
-      if (this.children[i].type === 'morph') this.children[i].getNative().mixer.update(delta);
+  addConstraint(constraint) {
+    this.$scene.addConstraint(constraint);
   }
 
   /**
    * This functon will scene properties when it's called.
    */
   setSize(width = 1, height = 1) {
-    this.getCamera().getNative().aspect = width / height;
-    this.getCamera().getNative().updateProjectionMatrix();
+    this.$camera.native.aspect = width / height;
+    this.$camera.native.updateProjectionMatrix();
 
-    this.getRenderer().setSize(
-      Number(width * this.getParams().rWidth).toFixed(),
-      Number(height * this.getParams().rHeight).toFixed()
-    );
+    if (this.$rendering) {
+      this.$rendering.setSize(width, height);
+    }
   }
 
-  setScene(scene, import_three = true) {
-    this.scene = scene;
+  importScene(scene, nested = true) {
+    this.modules.scene = scene;
 
-    if (import_three) {
+    if (nested) {
       this.children = [];
 
       const moveChildren = (object) => {
@@ -415,36 +354,21 @@ class World extends CoreObject {
           const obj3D = object.children[i];
           let WHSobj;
 
-          if (obj3D instanceof THREE.Light) WHSobj = new Light(obj3D);
-          else WHSobj = new Shape(obj3D);
-
+          WHSobj = new Component(obj3D);
           WHSobj.addTo(this);
 
           if (obj3D.children.length) moveChildren(obj3D, WHSobj);
         }
-      }
+      };
 
       moveChildren(scene, this);
     }
 
-    return this.scene;
-  }
-
-  getScene() {
-    return this.scene;
-  }
-
-  setRenderer(renderer) {
-    this.renderer = renderer;
-    return this.renderer;
-  }
-
-  getRenderer() {
-    return this.renderer;
+    return this.$scene;
   }
 
   setControls(controls) {
-    const recieved = controls(this);
+    const recieved = controls.integrate(this);
 
     this.controls = recieved instanceof Array ? recieved[0] : recieved;
 
@@ -454,28 +378,6 @@ class World extends CoreObject {
     ) recieved[1](this);
 
     return this.controls;
-  }
-
-  setCamera(camera) {
-    if (camera instanceof Camera)
-      this.camera = camera;
-    else
-      console.error('@WHS.World: camera in not an instance of WHS.Camera.');
-  }
-
-  getCamera() {
-    return this.camera;
-  }
-
-  remove(source) {
-    this.getScene().remove(source.getNative());
-
-    this.children.splice(this.children.indexOf(source), 1);
-    source.parent = null;
-
-    source.emit('remove');
-
-    return this;
   }
 }
 

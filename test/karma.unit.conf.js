@@ -43,15 +43,15 @@ module.exports = (config) => {
     colors: true,
 
     // level of logging
-    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+    // possible values: config.LOg_DISABLE || config.LOg_ERROR || config.LOg_WARN || config.LOg_INFO || config.LOg_DEBUG
+    logLevel: config.LOg_INFO,
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ["Chrome"],
+    browsers: ['Chrome'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
@@ -64,8 +64,8 @@ module.exports = (config) => {
     // Custom Chrome launcher for Travis CI
     customLaunchers: {
       Chrome_travis_ci: {
-        base: "Chrome",
-        flags: ["--no-sandbox"]
+        base: 'Chrome',
+        flags: ['--no-sandbox']
       }
     }
   }

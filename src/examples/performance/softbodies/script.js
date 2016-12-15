@@ -1,31 +1,21 @@
-window.GAME = new WHS.World({
-  stats: 'fps', // fps, ms, mb
-  autoresize: true,
+import * as UTILS from './globals';
+
+const world = new WHS.World({
+  ...UTILS.$world,
   softbody: true,
 
   gravity: {
-    x: 0,
-    y: -9.8,
-    z: 0
+    y: -9.8
   },
 
   camera: {
     far: 10000,
     near: 0.01,
-    y: 6,
-    z: 18
-  },
-
-  shadowmap: {
-    type: THREE.PCFSoftShadowMap
-  },
-
-  background: {
-    color: 0xaaaaaa
+    position: [0, 6, 18]
   }
 });
 
-var sphere = new WHS.Icosahedron({ // Softbody.
+const sphere = new WHS.Icosahedron({ // Softbody.
   geometry: {
     radius: 1,
     detail: 2
@@ -44,48 +34,33 @@ var sphere = new WHS.Icosahedron({ // Softbody.
     margin: 0.05
   },
 
+  shadow: {
+    cast: false,
+    receive: false
+  },
+
   material: {
-    color: 0x000ff,
+    color: UTILS.$colors.softbody,
     wireframe: true,
     kind: 'phong'
   },
 
-  pos: {
+  position: {
     y: 5
   }
 });
 
-sphere.getNative().frustumCulled = false;
+sphere.native.frustumCulled = false;
+sphere.position.y = 5;
 
-sphere.addTo(GAME).then(function () {
+UTILS.addBoxPlane(world, 250).then(() => sphere.addTo(world)).then(function () {
   for (var i = 0; i < 30; i++) {
     let newSphere = sphere.clone();
-    newSphere.position.y = 4 * (i + 1);
-    newSphere.getNative().frustumCulled = false;
-    newSphere.addTo(GAME);
+    newSphere.position.y = 5 + 4 * (i + 1);
+    newSphere.native.frustumCulled = false;
+    newSphere.addTo(world);
   }
 });
-
-new WHS.Box({
-  geometry: {
-    width: 2500,
-    height: 4,
-    depth: 2500
-  },
-
-  mass: 0,
-
-  material: {
-    color: 0xff0000,
-    kind: 'phong'
-  },
-
-  pos: {
-    x: 0,
-    y: -5,
-    z: 0
-  }
-}).addTo(GAME);
 
 new WHS.DirectionalLight({
   light: {
@@ -93,7 +68,7 @@ new WHS.DirectionalLight({
     intensity: 1
   },
 
-  pos: {
+  position: {
     x: 0,
     y: 10,
     z: 30
@@ -104,14 +79,14 @@ new WHS.DirectionalLight({
     y: 0,
     z: 0
   }
-}).addTo(GAME);
+}).addTo(world);
 
 new WHS.AmbientLight({
   light: {
     color: 0xffffff,
     intensity: 0.5
   }
-}).addTo(GAME);
+}).addTo(world);
 
-GAME.setControls(WHS.orbitControls());
-GAME.start();
+world.setControls(new WHS.OrbitControls());
+world.start();

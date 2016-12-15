@@ -5,7 +5,7 @@ export class RopeMesh extends Line {
     const physParams = params.physics;
 
     const mass = physParams.mass || params.mass;
-    super(geometry, material, mass);
+    super(geometry, material, mass, physParams);
 
     this._physijs.type = 'softRopeMesh';
 
@@ -41,6 +41,9 @@ export class RopeMesh extends Line {
   appendAnchor(world, object, node, influence, collisionBetweenLinkedBodies = true) {
     const o1 = this._physijs.id;
     const o2 = object._physijs.id;
+
+    if (!o1 || !o2)
+      console.error('Objects should be added to scene before calling .appendAnchor()');
 
     world.execute('appendAnchor', {
       obj: o1,

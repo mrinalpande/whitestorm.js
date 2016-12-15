@@ -1,45 +1,57 @@
-define(['whs'], function(WHS) {
-  describe('Light', () => {
-    const world = new WHS.World({init: {renderer: false}});
+define(['whs'], (WHS) => {
+  describe('[WHS.LightComponent]', () => {
+    const world = new WHS.World({modules: {rendering: false}});
 
-    function describeAttribute(light, name, dims, Value) {
-      describe('.' + name, done => {
-        it('Method', () => light[name].set(1, 1, 1));
-
-        it('Setter', () => {
-          light[name] = new Value(...(new Array(dims.length).fill(2)));
+    function describeAttribute(component, name, dims, Type) {
+      describe(`@test .${name}`, () => {
+        describe('#set()', () => {
+          it('should set new values', () => component[name].set(1, 1, 1));
         });
 
-        it('Poperties', () => {
-          for (let i = 0; i < dims.length; i++)
-            light[name][dims.charAt(i)] = 3;
+        it(`@set .${name}`, () => {
+          component[name] = new Type(...(new Array(dims.length).fill(2)));
+          return component[name];
         });
 
-        it('=== Values are equal ===', () => light.position === light.getNative().position);
+        describe('@test properties', () => {
+          for (let i = 0; i < dims.length; i++) {
+            it(`@set .${dims.charAt(i)}`, () => {
+              component[name][dims.charAt(i)] = 3;
+              return component[name][dims.charAt(i)];
+            });
+          }
+        });
+
+        it('@equal (light.position) and (light.native.position)',
+          () => component.position === component.native.position);
       });
     }
 
     function testAPI(light) {
-      // it('#wrapShadow()', () => light.wrapShadow());
-      // it('#wrap()', () => light.wrap());
-      // it('#wrap() - \'no-shadows\'', () => light.wrap('no-shadows'));
-      // it('#wrap() - \'no-transforms\'', () => light.wrap('no-transforms'));
-      it('#addTo()', () => light.addTo(world));
-      it('#clone()', () => light.clone());
-      it('#copy()', () => light.copy(new WHS.Light()));
-      it('#getWorld()', () => light.getWorld());
-      it('#getParent()', () => light.getParent());
+      describe('#wrap()', () => {
+        it('should wrap component`s params', () => light.wrap());
+      });
+
+      describe('#addTo()', () => {
+        it('should add component to the world', () => light.addTo(world));
+      });
+
+      describe('#clone()', () => {
+        it('should clone component', () => light.clone());
+      });
+
+      describe('#copy()', () => {
+        it('should copy specified component to existing one', () => light.copy(new WHS.Component()));
+      });
 
       describeAttribute(light, 'position', 'xyz', THREE.Vector3);
       describeAttribute(light, 'rotation', 'xyz', THREE.Euler);
       describeAttribute(light, 'quaternion', 'xyzw', THREE.Quaternion);
     }
 
-    context('Should wrap three.js lights', () => {
-      const lightMesh = new THREE.Light();
-      const light = new WHS.Light(lightMesh);
-
-      it('#wrap() - \'no-shadows\'', () => light.wrap('no-shadows'));
+    context('Should work also with Three.js lights [...THREE.Light]', () => {
+      const lightThree = new THREE.Light();
+      const light = new WHS.Element(lightThree, [WHS.LightComponent]);
 
       testAPI(light);
     });
@@ -52,16 +64,12 @@ define(['whs'], function(WHS) {
           distance: 300
         },
 
-        pos: {
+        position: {
           x: 2,
           y: 4,
           z: 6
         }
       });
-
-      it('#wrap()', () => light.wrap());
-      it('#wrap() - \'no-shadows\'', () => light.wrap('no-shadows'));
-      it('#wrap() - \'no-transforms\'', () => light.wrap('no-transforms'));
 
       testAPI(light);
     });

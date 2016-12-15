@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import * as Physijs from './physics/index.js';
 
-export * from './cameras/index';
+export * from './physics/alias/index';
 export * from './core/index';
+export * from './components/lights/index';
+export * from './components/cameras/index';
+export * from './components/meshes/index';
+export * from './components/rendering/index';
 export * from './extras/index';
-export * from './lights/index';
-export * from './meshes/index';
 export * from './utils/index';
 
 // DEPRECATION

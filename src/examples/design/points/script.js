@@ -1,4 +1,4 @@
-const GAME = new WHS.World({
+const world = new WHS.World({
   autoresize: "window",
 
   gravity: {
@@ -10,15 +10,19 @@ const GAME = new WHS.World({
   camera: {
     far: 2000,
     near: 1,
-    z: 20,
-    x: -8,
-    y: 5,
+    position: [-8, 5, 20],
 
-    aspect: 45
+    fov: 45
   },
 
-  background: {
-    color: 0xffffff
+  rendering: {
+    background: {
+      color: 0xffffff
+    },
+
+    renderer: {
+      antialias: true
+    }
   }
 });
 
@@ -49,11 +53,9 @@ const points = new WHS.Shape(
   new THREE.Points(geom, new THREE.PointsMaterial({vertexColors: THREE.VertexColors, size: 0.1}))
 );
 
-points.addTo(GAME);
+points.addTo(world);
 
-GAME.setControls(WHS.orbitControls(new THREE.Vector3(50, 50, 50)));
+world.setControls(new WHS.OrbitControls(new THREE.Vector3(50, 50, 50)));
 
 // Start rendering.
-GAME.start();
-
-
+world.start();

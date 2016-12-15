@@ -12,7 +12,7 @@ const colors = {
   yellow: 0xfaff70
 };
 
-const GAME = new WHS.World({
+const world = new WHS.World({
   stats: false,
   autoresize: "window",
 
@@ -25,17 +25,22 @@ const GAME = new WHS.World({
   camera: {
     far: 2000,
     near: 1,
-    z: 400,
-    y: 100
+    position: [0, 100, 400]
   },
 
-  background: {
-    color: 0x2a3340
+  rendering: {
+    background: {
+      color: 0x2a3340
+    },
+
+    renderer: {
+      antialias: true
+    }
   }
 });
 
-window.space = new WHS.Group();
-space.addTo(GAME);
+const space = new WHS.Group();
+space.addTo(world);
 space.rotation.z = Math.PI / 12;
 
 const planet = new WHS.Tetrahedron({
@@ -63,7 +68,7 @@ new WHS.AmbientLight({
     color: 0x663344,
     intensity: 2
   }
-}).addTo(GAME);
+}).addTo(world);
 
 new WHS.DirectionalLight({
   light: {
@@ -83,12 +88,12 @@ new WHS.DirectionalLight({
     far: 800
   },
 
-  pos: {
+  position: {
     x: 300,
     z: 300,
     y: 100
   }
-}).addTo(GAME);
+}).addTo(world);
 
 const s1 = new WHS.Dodecahedron({
   geometry: {
@@ -167,25 +172,26 @@ asteroids.addTo(space);
 
 // Materials.
 const mat = [
-  new THREE.MeshPhongMaterial({color: colors.green, shading: THREE.FlatShading}),
-  new THREE.MeshPhongMaterial({color: colors.blue, shading: THREE.FlatShading}),
-  new THREE.MeshPhongMaterial({color: colors.orange, shading: THREE.FlatShading}),
-  new THREE.MeshPhongMaterial({color: colors.yellow, shading: THREE.FlatShading})
+  new THREE.MeshPhongMaterial({ color: colors.green, shading: THREE.FlatShading }),
+  new THREE.MeshPhongMaterial({ color: colors.blue, shading: THREE.FlatShading }),
+  new THREE.MeshPhongMaterial({ color: colors.orange, shading: THREE.FlatShading }),
+  new THREE.MeshPhongMaterial({ color: colors.yellow, shading: THREE.FlatShading })
 ];
 
 for (let i = 0; i < particleCount; i++) {
   const particle = [s1, s2, s3, s4][Math.ceil(Math.random() * 3)].clone(),
     radius = particleMinRadius + Math.random() * (particleMaxRadius - particleMinRadius);
 
-  particle.G_({
+  particle.g_({
     radiusBottom: radius,
+    radiusTop: 0,
     height: particle instanceof WHS.Cylinder ? radius * 2 : radius,
     width: radius,
     depth: radius,
     radius
   });
 
-  particle.setMaterial(mat[Math.floor(4 * Math.random())]); // Set custom THREE.Material to mesh.
+  particle.material = mat[Math.floor(4 * Math.random())]; // Set custom THREE.Material to mesh.
 
   // Particle data.
   particle.data = {
@@ -221,10 +227,10 @@ const animation = new WHS.Loop(() => {
   planet.rotation.y += 0.005;
 });
 
-GAME.addLoop(animation);
-GAME.setControls(WHS.orbitControls());
+world.addLoop(animation);
+world.setControls(new WHS.OrbitControls());
 
 animation.start();
 
 // Start rendering.
-GAME.start();
+world.start();

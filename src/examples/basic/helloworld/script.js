@@ -1,63 +1,34 @@
-window.GAME = new WHS.World({
-  stats: 'fps', // fps, ms, mb
-  autoresize: true,
+import * as UTILS from './globals';
 
-  gravity: {
-    x: 0,
-    y: -100,
-    z: 0
-  },
+window.world = new WHS.World({
+  ...UTILS.$world,
 
-  camera: {
-    far: 10000,
-    y: 10,
-    z: 30
+  physics: {
+    ammo: 'http://localhost:8080/vendor/ammo.js'
   }
 });
 
-window.sphere = new WHS.Sphere({
+const sphere = new WHS.Sphere({ // Create sphere comonent.
   geometry: {
-    radius: 3
+    radius: 3,
+    widthSegments: 32,
+    heightSegments: 32
   },
 
-  mass: 10,
+  mass: 10, // Mass of physics object.
 
   material: {
-    color: 0xffffff,
-    kind: 'basic'
+    color: UTILS.$colors.mesh,
+    kind: 'lambert'
   },
 
-  pos: {
-    x: 0,
-    y: 100,
-    z: 0
-  }
+  position: [0, 100, 0]
 });
 
-window.sphere.addTo(GAME);
+sphere.addTo(world);
 
-new WHS.Plane({
-  geometry: {
-    width: 250,
-    height: 250
-  },
+UTILS.addPlane(world);
+UTILS.addBasicLights(world).then(o => console.log(o.native));
 
-  mass: 0,
-
-  material: {
-    color: 0xff0000,
-    kind: 'basic'
-  },
-
-  pos: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-
-  rot: {
-    x: -Math.PI / 2
-  }
-}).addTo(GAME);
-
-GAME.start();
+world.start(); // Start animations and physics simulation.
+world.setControls(new WHS.OrbitControls());

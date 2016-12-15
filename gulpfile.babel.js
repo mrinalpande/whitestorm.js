@@ -1,6 +1,7 @@
 // UTILS
 import path from 'path';
 import del from 'del';
+import {argv} from 'yargs';
 
 // GULP
 import gulp from 'gulp';
@@ -12,6 +13,7 @@ import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
 import {config} from './webpack.config.babel.js';
+import wConfig from './test/webpack/webpack.config.js';
 
 // SETTINGS
 const
@@ -39,7 +41,7 @@ const $ = loadPlugins({
 });
 
 // COMPILERS
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = argv.prod ? true : process.env.NODE_ENV === 'production';
 
 const webpackConfiguration = config({
   isProduction,
@@ -49,24 +51,49 @@ const webpackConfiguration = config({
 
 const webpackCompiler = webpack(webpackConfiguration[0]);
 const webpackCompilerLight = webpack(webpackConfiguration[1]);
+const wCompiler = webpack(wConfig); // Webpack test.
 
 // ENVIRONMENT  SETUP
 process.env.BABEL_ENV = 'node';
 
-gulp.task('default', ['examples:build', 'src:build']);
+// ALIAS
+gulp.task('default', ['build']);
+gulp.task('build', ['src:build', 'examples:build']);
+gulp.task('src:build', ['src:build:browser', 'src:build:node']);
 
 // BUILD: browser
-gulp.task('src:build', ['build:clean'], (callback) => {
+gulp.task('src:build:browser', ['build:clean'], (callback) => {
   webpackCompiler.run((error, stats) => {
     if (error) throw new $.util.PluginError('webpack', error);
     $.util.log('[webpack]', stats.toString({colors: true}));
 
-    webpackCompilerLight.run((error, stats) => {
-      if (error) throw new $.util.PluginError('webpack', error);
-      $.util.log('[webpack]', stats.toString({colors: true}));
-      callback();
-    });
+    if (!argv.main)
+      webpackCompilerLight.run((error, stats) => {
+        if (error) throw new $.util.PluginError('webpack', error);
+        $.util.log('[webpack]', stats.toString({colors: true}));
+        callback();
+      });
   });
+});
+
+gulp.task('src:build:node', () => {
+  gulp.src(`${frameworkSrc}/**/*`)
+    .pipe($.cached('babel', {optimizeMemory: true}))
+    .pipe($.babel({
+      "presets": [
+        "es2015"
+      ],
+      "plugins": [
+        "transform-runtime",
+        "add-module-exports",
+        "transform-decorators-legacy",
+        "transform-class-properties",
+        "transform-object-rest-spread"
+      ]
+    }))
+    .on('error', makeBuildErrorHandler('babel'))
+    .pipe(gulp.dest('./lib/'));
+
 });
 
 // DEV MODE
@@ -79,6 +106,18 @@ gulp.task('dev', ['examples:build', 'examples:watch'], () => {
   });
 
   server.listen(8080, 'localhost', () => {});
+});
+
+// DEV MODE
+gulp.task('webpack-dev', () => {
+  const server = new WebpackDevServer(wCompiler, {
+    contentBase: './test/webpack/',
+    publicPath: '/build/',
+
+    stats: {colors: true}
+  });
+
+  server.listen(8001, 'localhost', () => {});
 });
 
 // EXAMPLES: WATCH
@@ -247,7 +286,7 @@ gulp.task('examples:clean', (callback) => {
 });
 
 gulp.task('build:clean', (callback) => {
-  del([`${frameworkDest}/*.js`, `${frameworkDest}/*.map`]).then(() => callback());
+  del([`${frameworkDest}/*.js`, `${frameworkDest}/*.map`, './lib/**/*.js', './lib/**/*.map']).then(() => callback());
 });
 
 // ERRORS

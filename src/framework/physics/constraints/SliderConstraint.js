@@ -1,9 +1,9 @@
-import {convertWorldPositionToObject, getObjectId} from '../api';
+import {convertWorldPositionToObject} from '../api';
 
 export class SliderConstraint {
   constructor(obja, objb, position, axis) {
-    const objecta = obja.getNative();
-    let objectb = obja.getNative();
+    const objecta = obja;
+    let objectb = objb;
 
     if (axis === undefined) {
       axis = position;
@@ -13,7 +13,6 @@ export class SliderConstraint {
 
     this.type = 'slider';
     this.appliedImpulse = 0;
-    this.id = getObjectId();
     this.scene = objecta.parent;
     this.objecta = objecta._physijs.id;
     this.positiona = convertWorldPositionToObject(position, objecta).clone();

@@ -1,76 +1,102 @@
 
+<a href="https://whsjs.io/"><img width="60%" src="https://raw.githubusercontent.com/WhitestormJS/whitestorm.js/dev/media/art/logo/big-inverted.png"></a>
 
-<p align="center"><img src="https://raw.githubusercontent.com/WhitestormJS/whitestorm.js/master/media/art/logo/big.png"></p>
+[![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg?style=flat-square)](https://github.com/sindresorhus/xo)
+[![NPM Version](https://img.shields.io/npm/v/whs.svg?style=flat-square)](https://www.npmjs.com/package/whs)
+[![Build Status](https://img.shields.io/travis/WhitestormJS/whitestorm.js.svg?style=flat-square)](https://travis-ci.org/WhitestormJS/whitestorm.js)
+[![Known Vulnerabilities](https://snyk.io/test/npm/whs/badge.svg?style=flat-square)](https://snyk.io/test/npm/whs)
+[![Discord](https://discordapp.com/api/guilds/238405369859145729/widget.png)](https://discord.gg/frNetGE)
 
-<p align="center">
-    <a href="https://travis-ci.org/WhitestormJS/whitestorm.js" align="center"><img src="http://wsbadge.herokuapp.com/travis/WhitestormJS/whitestorm.js.svg?style=flat-square"></a>&nbsp;&nbsp;
-    <a href="https://www.npmjs.com/package/whitestormjs"><img src="http://wsbadge.herokuapp.com/npm/v/whitestormjs.svg?style=flat-square"></a>&nbsp;&nbsp;          
-    <a href="https://github.com/WhitestormJS/whitestorm.js"><img src="http://wsbadge.herokuapp.com/bower/v/whitestormjs.svg?style=flat-square"></a>&nbsp;&nbsp;
-    <a href="https://raw.githubusercontent.com/WhitestormJS/whitestorm.js/master/LICENSE" alt="License"><img src="http://wsbadge.herokuapp.com/github/license/WhitestormJS/whitestorm.js.svg?style=flat-square"></a>&nbsp;&nbsp;
-    <a href="https://whslack.herokuapp.com/"><img src="https://whslack.herokuapp.com/badge.svg?style=flat-square"></a>
+> **Framework for developing 3D web apps**
+
+## [Showcases](https://whs-dev.surge.sh/examples/)
+
+You can find lots of examples at [showcases](https://whs-dev.surge.sh/examples/).
+
+<a href="https://whs-dev.surge.sh/examples/#basic/helloworld">
+  <img alt="basic/helloworld" target="_blank" src="http://i.imgur.com/IRq5Hp4.gif" width="33%" />
+</a>
+<a href="https://whs-dev.surge.sh/examples/#basic/model">
+  <img alt="basic/model" target="_blank" src="http://i.imgur.com/RmTjjiA.gif" width="33%" />
+</a>
+<a href="https://whs-dev.surge.sh/examples/#softbody/cloth3">
+  <img alt="softbody/cloth3" target="_blank" src="http://i.imgur.com/BgHdX56.gif" width="33%" />
+</a>
+<a href="https://whs-dev.surge.sh/examples/#post-processing/basic-glitch">
+  <img alt="postprocessing/basic-glitch" target="_blank" src="http://i.imgur.com/ASUN7tR.gif" width="33%" />
+</a>
+<a href="https://whs-dev.surge.sh/examples/#softbody/ropes">
+  <img alt="softbody/ropes" target="_blank" src="http://i.imgur.com/wRFKfTM.gif" width="33%" />
+</a>
+<a href="https://whs-dev.surge.sh/examples/#design/saturn">
+  <img alt="design/saturn" target="_blank" src="http://i.imgur.com/JZ5HryS.gif" width="33%" />
+</a>
+
+### Why?
+* 🤔 Because making of even **a basic Three.js application requires at least ~20 lines of code** (see [this tutorial](https://threejs.org/docs/index.html#Manual/Introduction/Creating_a_scene))
+  - **Native three.js:** you will need to setup: _scene, renderer, camera_, make an `animate()` function before making the actual app.
+  - **Whitestorm.js:** all those values are filled with defaults, you just need to define your own values **only if they differs from defaults**.
+
+* 💣 **Adding physics is hard.**
+  - **Other frameworks:** To make your app run with physics you need to make a second world with same 3d objects and apply their transform (position & rotation) to your rendered scene objects (`THREE.Scene` for example) in every frame.
+  - **Whitestorm.js:** All this can be done **automatically**.
+
+* 🔌 **Components & plugins**
+  - **Other:** `Unknown yet`.
+  - **Whitestorm.js:** It provides ability to create your own components using framework's tools. (**You can add a component** like `WHS.Box` or `WHS.PointLight` but for creating a _terrain (`WHS.Terrain`) / aquarium (`WHS.Aquarium`) / car (`WHS.Car`) / any other_ with specific merhods and scripts.
+  - See [Component system in interactive 3D of web](https://medium.com/@_alex_buzin/component-system-in-interactive-3d-of-web-18348eecf270#.lynivy4ut) article for more info.
+
+-----
 
 
-    <p align="center"><i><b>Framework for developing 3D web apps with physics.</b></i></p>
-</p>
+## Features
 
-<br>
+* 💎 **Simple in usage**
+* Minimize 3D scene prototyping
+* 🔌  **Component based scene graph**
+* 💣 Integrated **high performance physics** with `Worker` (Multithreading)
+* Automatization of rendering
+* Enhanced **softbodies**
+* 🆕 **ES2015+ based**
+* Extension system (plugins)
+* Dynamic geometry update
+* [asm.js](http://asmjs.org/) acceleration
+* [Webpack](https://whsjs.io/#/api/webpack) friendly
+* ✔️ **Integrated [Three.js](https://threejs.org/) rendering engine**
+* Work with Whitestorm.js and Three.js at the same time
 
-------
-
-## FEATURES
-
-* **Simple shape crafting** — We use a JSON-like structure for creating objects from inputted data and adding them to your 3D world.
-
-* **Physics with WebWorkers** — We use the [Physi.js](https://github.com/chandlerprall/Physijs/blob/master/physi.js) library for calculating physics of 3D shapes with **WebWorkers technology** that allows for rendering and calculating physics in multiple threads.
-
-* **Plugin system** — Our framework supports *plugins & components* made by other users. You need to include them after whitestorm.js and follow provided instructions.
-
-* **Automatization of rendering** — Our framework does rendering automatically and doesn't need a to be called. Functionality like the `resize` function can be called automatically by setting additional parameters such as `autoresize: true`.
-
-* **ES6 Features** - Our framework is written using the latest features of ECMAScript 6 and ECMAScript 7 (beta) features and compiled with [Babel](https://babeljs.io/).
-
-* **Softbodies** - WhitestormJS is the only engine (except native ammo.js) that supports softbodies.
-
-## PLAYGROUND :rocket:
-<a href="http://ow.ly/J4Tw302obGz"><img src="http://i.imgur.com/6EdMjm1.gif"></a>
-
-## GAME EXAMPLE :video_game:
-<a href="http://192.241.128.187/current/examples/fps/shooter/" target="_blank"><img src="https://raw.githubusercontent.com/WhitestormJS/whitestorm.js/master/media/art/splash.png"></a>
-
-## INSTALLATION &#10540; USAGE
-
-#### NODE
+## Installation
+### NODE
 
 ```bash
-npm install whitestormjs
+$ npm install --save whs
 ```
 
-#### BROWSER
+### WEBPACK
 
-Include a script tag linking the [WhitestormJS](https://cdn.jsdelivr.net/whitestormjs/latest/whitestorm.min.js) library in your `head` or after your `body`:
+See [WhitestormJS/test-whitestorm-webpack](https://github.com/WhitestormJS/test-whitestorm-webpack) for more details.
 
-```html
-<script src="{path_to_lib}/whitestorm.js"></script>
-```
+## Documentation
 
-After adding these libraries, you can configure your app:
+Full documentation of guides and APIs are located at [here](http://whsjs.io/).
+
+## Usage
+
 ```javascript
 const world = new WHS.World({
     stats: "fps", // fps, ms, mb or false if not need.
-    autoresize: true,
+    autoresize: "window",
 
-    gravity: { // Physic gravity.
-        x: 0,
-        y: -100,
-        z: 0
-    },
-    
+    gravity: [0, -100, 0], // Physic gravity.
+
     camera: {
-      z: 50 // Move camera.
+      position: {
+        z: 50 // Move camera.
+      }
     }
 });
 
-const sphere = new WHS.Sphere({ // Create sphere object.
+const sphere = new WHS.Sphere({ // Create sphere comonent.
   geometry: {
     radius: 3
   },
@@ -78,71 +104,34 @@ const sphere = new WHS.Sphere({ // Create sphere object.
   mass: 10, // Mass of physics object.
 
   material: {
-    color: 0xffffff,
-    kind: 'basic'
+    color: 0xffffff, // White color.
+    kind: 'basic' // THREE.MeshBasicMaterial
   },
 
-  pos: {
-    x: 0,
-    y: 100,
-    z: 0
-  }
+  position: [0, 10, 0]
 });
 
-sphere.addTo(GAME);
-sphere.getNative(); // Returns THREE.Mesh of this object.
+sphere.addTo(world);
+console.log(sphere.native); // Returns THREE.Mesh of this object.
 
 world.start(); // Start animations and physics simulation.
 ```
 
-<br>
+## Playground!
 
-## [Examples](http://192.241.128.187/current/examples/):
+[![playground](http://i.imgur.com/6EdMjm1.gif)](http://whsjs.io/playground/)
 
-#### :space_invader: BASIC:
- * [Basic / Hello world](http://192.241.128.187/current/examples/basic/helloworld/)  (Basic "Hello world!" example.)
- * [Basic / Model](http://192.241.128.187/current/examples/basic/model/)  (Basic model example.)
- * [Basic / Debugging](http://192.241.128.187/current/examples/basic/debugging/)  (Object's debug example.)
- * [Basic / Extending API](http://192.241.128.187/current/examples/basic/extending/)  (Extending api example.)
- * [Basic / Softbody](http://192.241.128.187/current/examples/basic/softbody/)  (Basic softbody implementation.)
- * [Basic / Three.js](http://192.241.128.187/current/examples/basic/threejs/)  (Importing three.js scene to whitestormjs core.)
 
-#### :gem: DESIGN:
- * [Design / Saturn](http://192.241.128.187/current/examples/design/saturn/)  (Saturn planet example from: http://codepen.io/Yakudoo/pen/qbygaJ)
- * [Design / Easter](http://192.241.128.187/current/examples/design/easter/)  (Easter rabbit with easter eggs.)
- * [Design / Points](http://192.241.128.187/current/examples/design/points/)  (Using WHS.Points to make a point cloud shaped in cube.)
+## Contributors
 
-#### :snowboarder: FIRST-PERSON:
- * [FPS / Shooter](http://192.241.128.187/current/examples/fps/shooter/)  (First person example with Wagner effects and terrain. + fog)
- * [FPS / Fog](http://192.241.128.187/current/examples/fps/fog/)  (First person game with animated objects)
+[![Author](http://wsbadge.herokuapp.com/badge/Author-Alexander%20Buzin-orange.svg?style=flat-square)](https://github.com/sasha240100)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-jackdalton-green.svg?style=flat-square)](https://github.com/jackdalton)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-Noctisdark-green.svg?style=flat-square)](https://github.com/noctisdark)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-bdirl-green.svg?style=flat-square)](https://github.com/bdirl)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-preco21-green.svg?style=flat-square)](https://github.com/preco21)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-yeliex-green.svg?style=flat-square)](https://github.com/yeliex)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-t4r0-green.svg?style=flat-square)](https://github.com/t4r0)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-electron0zero-green.svg?style=flat-square)](https://github.com/electron0zero)
+[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-typedef42-green.svg?style=flat-square)](https://github.com/typedef42)
 
-#### :bowling: PHYSICS:
- * [Physics / Dominos](http://192.241.128.187/current/examples/physics/domino/)  (Physics example with dominos.)
-
-#### :rocket: PERFORMANCE:
- * [Performance / Sticks](http://192.241.128.187/current/examples/performance/sticks/)  (Collisions performance of 320 basic box objects.)
-
-----
-
-#### :chart_with_upwards_trend: [Changelog](https://github.com/WhitestormJS/whitestorm.js/blob/master/.github/CHANGELOG.md) | :book: [Documentation](http://whitestormjs.xyz/) | :video_game: [Playground](http://whitestormjs.xyz/playground/)
-
-----
-
-## [Contributors](https://github.com/WhitestormJS/whitestorm.js/graphs/contributors):
-[![Author](http://wsbadge.herokuapp.com/badge/Author-Alexander%20Buzin-red.svg)](https://github.com/sasha240100)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-jackdalton-blue.svg)](https://github.com/jackdalton)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-Noctisdark-blue.svg)](https://github.com/noctisdark)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-bdirl-blue.svg)](https://github.com/bdirl)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-preco21-blue.svg)](https://github.com/preco21)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-yeliex-blue.svg)](https://github.com/yeliex)
-
-[![Contributor](http://wsbadge.herokuapp.com/badge/Contributor-electron0zero-blue.svg)](https://github.com/electron0zero)
-
-<br>
-
-[![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](https://alexbuzin.me/)   <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Лицензия Creative Commons" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a>
+[![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](https://alexbuzin.me/)

@@ -1,76 +1,81 @@
-window.GAME = new WHS.World({
-  stats: 'fps', // fps, ms, mb
-  autoresize: "window",
+import * as UTILS from './globals';
 
-  gravity: {
-    x: 0,
-    y: -100,
-    z: 0
-  },
+const world = new WHS.World({
+  ...UTILS.$world,
 
   camera: {
     far: 10000,
-    y: 10,
-    z: 30
+    position: [0, 2, 12]
   },
 
-  init: {
+  plugins: {
     scene: false
   }
 });
 
 const scene = new THREE.Scene();
+const material = new THREE.MeshPhongMaterial({color: UTILS.$colors.mesh});
+const materialNested = material.clone();
+materialNested.color.set(0x0000ff);
+const materialWHS = material.clone();
+materialWHS.color.set(0xffffff);
+materialWHS.map = new WHS.texture('{{ assets }}/textures/earth.jpg');
 
-const obj1 = new THREE.Mesh(new THREE.SphereGeometry(3, 32, 32), new THREE.MeshBasicMaterial({color: 0xffffff}));
-obj1.position.set(6, 6, 0);
-
-scene.add(obj1);
-
-const obj2 = new THREE.Mesh(new THREE.SphereGeometry(3, 32, 32), new THREE.MeshBasicMaterial({color: 0xffffff}));
-obj2.position.set(12, 6, 0);
-
-scene.add(obj2);
-
-const obj3 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshBasicMaterial({color: 0x0000ff}));
-obj3.position.set(0, 0, 3);
-
-// Nested object.
-obj2.add(obj3);
-
-GAME.setScene(scene, true);
-GAME._initCamera();
-GAME._initRenderer();
-GAME._initHelpers();
-
-const sphere = new WHS.Shape(
-  new THREE.Mesh(new THREE.SphereGeometry(3, 32, 32), new THREE.MeshBasicMaterial({color: 0xffffff}))
+const mesh1 = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 32, 32),
+  material
 );
 
-sphere.addTo(GAME);
-sphere.position.y = 3;
+mesh1.position.set(2, 2, 0);
 
-new WHS.Plane({
-  geometry: {
-    width: 250,
-    height: 250
-  },
+scene.add(mesh1);
 
-  mass: 0,
+const mesh2 = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 32, 32),
+  material
+);
 
-  material: {
-    color: 0xff0000,
-    kind: 'basic'
-  },
+mesh2.position.set(4, 2, 0);
 
-  pos: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
+scene.add(mesh2);
 
-  rot: {
-    x: -Math.PI / 2
-  }
-}).addTo(GAME);
+const mesh3 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 32, 32),
+  materialNested
+);
 
-GAME.start();
+mesh3.position.set(0, 0, 1);
+
+// Nested object.
+mesh2.add(mesh3);
+
+world.importScene(scene, true);
+world.make$camera();
+world.make$rendering();
+world.make$helpers();
+
+const sphere = new WHS.Element(
+  new THREE.Mesh(
+    new THREE.SphereGeometry(1, 32, 32),
+    materialWHS
+  ),
+  [WHS.MeshComponent]
+);
+
+sphere.addTo(world);
+sphere.position.y = 2;
+
+const light = new WHS.Element(
+  new THREE.PointLight(),
+  [WHS.LightComponent]
+);
+
+light.wrap();
+
+light.addTo(world);
+
+UTILS.addPlane(world);
+UTILS.addBasicLights(world);
+
+world.setControls(new WHS.OrbitControls());
+world.start();

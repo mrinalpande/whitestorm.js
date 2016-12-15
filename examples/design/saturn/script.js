@@ -20,7 +20,7 @@ var colors = {
   yellow: 0xfaff70
 };
 
-var GAME = new WHS.World({
+var world = new WHS.World({
   stats: false,
   autoresize: "window",
 
@@ -33,17 +33,22 @@ var GAME = new WHS.World({
   camera: {
     far: 2000,
     near: 1,
-    z: 400,
-    y: 100
+    position: [0, 100, 400]
   },
 
-  background: {
-    color: 0x2a3340
+  rendering: {
+    background: {
+      color: 0x2a3340
+    },
+
+    renderer: {
+      antialias: true
+    }
   }
 });
 
-window.space = new WHS.Group();
-space.addTo(GAME);
+var space = new WHS.Group();
+space.addTo(world);
 space.rotation.z = Math.PI / 12;
 
 var planet = new WHS.Tetrahedron({
@@ -71,7 +76,7 @@ new WHS.AmbientLight({
     color: 0x663344,
     intensity: 2
   }
-}).addTo(GAME);
+}).addTo(world);
 
 new WHS.DirectionalLight({
   light: {
@@ -91,12 +96,12 @@ new WHS.DirectionalLight({
     far: 800
   },
 
-  pos: {
+  position: {
     x: 300,
     z: 300,
     y: 100
   }
-}).addTo(GAME);
+}).addTo(world);
 
 var s1 = new WHS.Dodecahedron({
   geometry: {
@@ -180,15 +185,16 @@ for (var i = 0; i < particleCount; i++) {
   var particle = [s1, s2, s3, s4][Math.ceil(Math.random() * 3)].clone(),
       radius = particleMinRadius + Math.random() * (particleMaxRadius - particleMinRadius);
 
-  particle.G_({
+  particle.g_({
     radiusBottom: radius,
+    radiusTop: 0,
     height: particle instanceof WHS.Cylinder ? radius * 2 : radius,
     width: radius,
     depth: radius,
     radius: radius
   });
 
-  particle.setMaterial(mat[Math.floor(4 * Math.random())]); // Set custom THREE.Material to mesh.
+  particle.material = mat[Math.floor(4 * Math.random())]; // Set custom THREE.Material to mesh.
 
   // Particle data.
   particle.data = {
@@ -224,12 +230,12 @@ var animation = new WHS.Loop(function () {
   planet.rotation.y += 0.005;
 });
 
-GAME.addLoop(animation);
-GAME.setControls(WHS.orbitControls());
+world.addLoop(animation);
+world.setControls(new WHS.OrbitControls());
 
 animation.start();
 
 // Start rendering.
-GAME.start();
+world.start();
 
 },{}]},{},[1]);

@@ -1,19 +1,20 @@
-import * as THREE from 'three';
-import {Shape} from '../core/Shape';
-import {CoreObject} from '../core/CoreObject';
+import {Object3D} from 'three';
+import {Component} from '../core/Component';
+import {MeshComponent} from '../core/MeshComponent';
 
-class Group extends Shape {
+@MeshComponent
+class Group extends Component {
   constructor(...objects) {
-    super({}, 'group');
+    super({}, Group.defaults);
 
-    super.setNative(new THREE.Object3D());
+    super.native = new Object3D();
     super.wrap();
 
     for (let i = 0; i < objects.length; i++) {
-    	const obj = objects[i];
+      const obj = objects[i];
 
-    	if (obj instanceof CoreObject) obj.addTo(this);
-    	else if (obj instanceof THREE.Object3D) this.getNative().add(obj);
+      if (obj instanceof Component) obj.addTo(this);
+      else if (obj instanceof Object3D) this.native.add(obj);
     }
   }
 }
